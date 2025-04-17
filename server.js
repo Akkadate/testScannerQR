@@ -74,12 +74,6 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// เพิ่มต่อท้ายไฟล์ server.js
 app.listen(port, () => {
   console.log(`QR Scanner test server running at http://localhost:${port}`);
-  console.log('\nคำแนะนำ:');
-  console.log('- การเข้าถึงกล้องเว็บแคมต้องใช้ HTTPS หรือ localhost');
-  console.log('- ใช้ Chrome, Firefox หรือ Safari รุ่นใหม่');
-  console.log('- ตรวจสอบว่าได้ให้สิทธิ์การเข้าถึงกล้องกับเว็บไซต์นี้');
-  console.log('- หากไม่สามารถใช้กล้องได้ ระบบจะเสนอตัวเลือกการอัปโหลดรูปภาพแทน');
 });
