@@ -154,6 +154,39 @@ function addFileUploadOption() {
     document.getElementById('process-file').addEventListener('click', processQRFromFile);
 }
 
+    // เพิ่มต่อท้ายฟังก์ชัน addFileUploadOption()
+const manualInputDiv = document.createElement('div');
+manualInputDiv.className = 'mt-3';
+manualInputDiv.innerHTML = `
+    <div class="card">
+        <div class="card-header bg-warning text-white">
+            <h5 class="mb-0">ป้อนข้อมูล QR Code โดยตรง</h5>
+        </div>
+        <div class="card-body">
+            <div class="mb-3">
+                <label for="qr-text" class="form-label">ป้อนข้อมูลจาก QR Code โดยตรง:</label>
+                <textarea class="form-control" id="qr-text" rows="4" placeholder="ป้อนข้อมูลที่ได้จาก QR Code ที่นี่"></textarea>
+            </div>
+            <button id="process-text" class="btn btn-primary">ประมวลผล</button>
+        </div>
+    </div>
+`;
+
+document.getElementById('scanner-container').appendChild(manualInputDiv);
+
+// เพิ่ม event listener สำหรับปุ่มประมวลผลข้อความ
+document.getElementById('process-text').addEventListener('click', function() {
+    const qrText = document.getElementById('qr-text').value.trim();
+    
+    if (!qrText) {
+        resultContainer.innerHTML = '<div class="alert alert-warning">กรุณาป้อนข้อมูล QR Code</div>';
+        return;
+    }
+    
+    // ใช้ฟังก์ชัน onScanSuccess ที่มีอยู่แล้ว
+    onScanSuccess(qrText);
+});
+
 // ฟังก์ชันประมวลผล QR code จากไฟล์รูปภาพ
 function processQRFromFile() {
     const fileInput = document.getElementById('qr-file');
