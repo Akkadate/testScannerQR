@@ -12,17 +12,62 @@ document.addEventListener('DOMContentLoaded', function() {
     let scanner = null;
     
     // โหลดค่า config จาก server
-    async function loadConfig() {
-        try {
-            const response = await fetch('/api/scanner-config');
-            const data = await response.json();
-            config = data;
-            console.log('Config loaded', { qrExpiryMinutes: config.qrExpiryMinutes });
-        } catch (error) {
-            console.error('Failed to load config:', error);
-            resultContainer.innerHTML = '<div class="alert alert-danger">ไม่สามารถโหลดการตั้งค่าได้</div>';
-        }
+   // ในส่วนของ loadConfig ในไฟล์ scanner.js
+async function loadConfig() {
+    try {
+        const response = await fetch('/api/scanner-config');
+        const data = await response.json();
+        config = data;
+        // ตั้งค่า config ให้กับ QRDecoder
+        QRDecoder.setConfig(data);
+        console.log('Config loaded', { qrExpiryMinutes: config.qrExpiryMinutes });
+    } catch (error) {
+        console.error('Failed to load config:', error);
+        resultContainer.innerHTML = '<div class="alert alert-danger">ไม่สามารถโหลดการตั้งค่าได้</div>';
     }
+}
+
+// ในส่วนของ onScanSuccess ในไฟล์ scanner.js
+async function onScanSuccess(decodedText) {
+    try {
+        // แสดงข้อมูลดิบที่สแกนได้
+        resultContainer.innerHTML = '<div class="alert alert-info">กำลังถอดรหัส...</div>';
+        
+        // ใช้ QRDecoder เพื่อถอดรหัส
+        const data = await QRDecoder.decodeQRData(decodedText);
+        
+        // ตรวจสอบว่า QR Code หมดอายุหรือไม่
+        const isExpired = QRDecoder.isExpired(data);
+        
+        // จัดรูปแบบข้อมูลสำหรับแสดงผล
+        const formattedData = QRDecoder.formatDecodedData(data);
+        
+        let html = '<div class="card">';
+        html += '<div class="card-header bg-primary text-white">ข้อมูล QR Code</div>';
+        html += '<div class="card-body">';
+        
+        if (isExpired) {
+            html += '<div class="alert alert-danger mb-3">QR Code นี้หมดอายุแล้ว</div>';
+        } else {
+            html += '<div class="alert alert-success mb-3">QR Code ยังใช้งานได้</div>';
+        }
+        
+        // แสดงข้อมูลในรูปแบบตาราง
+        html += '<table class="table table-striped">';
+        for (const [key, value] of Object.entries(formattedData)) {
+            html += `<tr>
+                <td><strong>${key}</strong></td>
+                <td>${value}</td>
+            </tr>`;
+        }
+        html += '</table>';
+        html += '</div></div>';
+        
+        resultContainer.innerHTML = html;
+    } catch (error) {
+        resultContainer.innerHTML = `<div class="alert alert-danger">เกิดข้อผิดพลาด: ${error.message}</div>`;
+    }
+}
     
     // เริ่มสแกน QR Code
     function startScanner() {
