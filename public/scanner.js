@@ -71,26 +71,122 @@ async function onScanSuccess(decodedText) {
 }
 
     
-    // เริ่มสแกน QR Code
-    function startScanner() {
-        const html5QrCode = new Html5Qrcode("video-container");
+   // แก้ไขฟังก์ชัน startScanner ใน scanner.js
+function startScanner() {
+    // ตรวจสอบว่าเบราว์เซอร์รองรับการเข้าถึงกล้องหรือไม่
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        resultContainer.innerHTML = `<div class="alert alert-danger">
+            เบราว์เซอร์ของคุณไม่รองรับการเข้าถึงกล้อง<br>
+            ลองใช้ Chrome, Firefox, Safari รุ่นใหม่ หรือตรวจสอบว่าเปิดใช้งานบน HTTPS หรือ localhost
+        </div>`;
+        return;
+    }
+
+    // ทางเลือกอื่นสำหรับการสแกน QR
+    const html5QrCode = new Html5Qrcode("video-container");
+    const config = {
+        fps: 10,
+        qrbox: { width: 250, height: 250 },
+        formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ]
+    };
+
+    // ทดลองใช้กล้องหลัง (ถ้ามี)
+    html5QrCode.start(
+        { facingMode: "environment" },
+        config,
+        onScanSuccess,
+        onScanFailure
+    ).then(() => {
+        scanner = html5QrCode;
+        startButton.disabled = true;
+        stopButton.disabled = false;
+    }).catch(err => {
+        console.error("กล้องหลังไม่สามารถใช้งานได้, ลองใช้กล้องหน้าแทน:", err);
         
+        // ลองใช้กล้องหน้าถ้ากล้องหลังไม่ทำงาน
         html5QrCode.start(
-            { facingMode: "environment" },
-            {
-                fps: 10,
-                qrbox: 250
-            },
+            { facingMode: "user" },
+            config,
             onScanSuccess,
             onScanFailure
         ).then(() => {
             scanner = html5QrCode;
             startButton.disabled = true;
             stopButton.disabled = false;
-        }).catch(err => {
-            resultContainer.innerHTML = `<div class="alert alert-danger">ไม่สามารถเริ่มกล้องได้: ${err}</div>`;
+        }).catch(frontErr => {
+            resultContainer.innerHTML = `<div class="alert alert-danger">
+                ไม่สามารถเข้าถึงกล้องได้:<br>${frontErr.message}<br><br>
+                <strong>ทางแก้ไข:</strong><br>
+                1. ตรวจสอบว่าคุณได้ให้สิทธิ์การเข้าถึงกล้องกับเว็บไซต์นี้<br>
+                2. ใช้เบราว์เซอร์รุ่นใหม่ (Chrome, Firefox, Safari)<br>
+                3. ตรวจสอบว่ากล้องทำงานปกติในแอปอื่นๆ<br>
+                4. ลองใช้ช่องทางอื่นในการสแกน QR code
+            </div>`;
+            
+            // ให้ตัวเลือกในการอัปโหลดรูปภาพ QR Code แทน
+            addFileUploadOption();
         });
+    });
+}
+
+// เพิ่มฟังก์ชันอัปโหลดรูปภาพ QR code
+function addFileUploadOption() {
+    const uploadDiv = document.createElement('div');
+    uploadDiv.className = 'mt-3';
+    uploadDiv.innerHTML = `
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">อัปโหลดรูปภาพ QR Code</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="qr-file" class="form-label">เลือกไฟล์รูปภาพที่มี QR Code:</label>
+                    <input class="form-control" type="file" id="qr-file" accept="image/*">
+                </div>
+                <button id="process-file" class="btn btn-primary">ประมวลผล QR Code</button>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('scanner-container').appendChild(uploadDiv);
+    
+    // เพิ่ม event listener สำหรับปุ่มอัปโหลด
+    document.getElementById('process-file').addEventListener('click', processQRFromFile);
+}
+
+// ฟังก์ชันประมวลผล QR code จากไฟล์รูปภาพ
+function processQRFromFile() {
+    const fileInput = document.getElementById('qr-file');
+    
+    if (!fileInput.files || fileInput.files.length === 0) {
+        resultContainer.innerHTML = '<div class="alert alert-warning">กรุณาเลือกไฟล์รูปภาพ</div>';
+        return;
     }
+    
+    const file = fileInput.files[0];
+    const fileReader = new FileReader();
+    
+    fileReader.onload = function(e) {
+        const html5QrCode = new Html5Qrcode("video-container");
+        
+        html5QrCode.scanFile(file, true)
+            .then(decodedText => {
+                // ใช้ฟังก์ชัน onScanSuccess ที่มีอยู่แล้ว
+                onScanSuccess(decodedText);
+            })
+            .catch(err => {
+                resultContainer.innerHTML = `<div class="alert alert-danger">
+                    ไม่พบ QR code ในรูปภาพ หรือไม่สามารถอ่านได้: ${err}
+                </div>`;
+            });
+    };
+    
+    fileReader.onerror = function() {
+        resultContainer.innerHTML = '<div class="alert alert-danger">เกิดข้อผิดพลาดในการอ่านไฟล์</div>';
+    };
+    
+    fileReader.readAsDataURL(file);
+}
     
     // หยุดสแกน
     function stopScanner() {
