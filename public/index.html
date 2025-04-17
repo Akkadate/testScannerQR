@@ -32,7 +32,7 @@
         .btn-scan {
             margin-top: 10px;
         }
-    </style>
+   </style>
 </head>
 <body>
     <div class="container">
@@ -45,7 +45,7 @@
                 </div>
                 <div class="card-body">
                     <div id="video-container">
-                        <video id="video" autoplay></video>
+                        <!-- กล้องจะถูกแสดงที่นี่ -->
                     </div>
                     <div class="d-flex justify-content-between mt-3">
                         <button id="start-button" class="btn btn-primary">เริ่มสแกน</button>
@@ -67,11 +67,14 @@
         </div>
     </div>
     
+    <!-- โหลด CryptoJS สำหรับการถอดรหัสแบบ AES (ถ้าจำเป็น) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    
+    <!-- ตรวจสอบว่าโหลด library Html5Qrcode เวอร์ชันล่าสุด -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <script src="scanner.js"></script>
-    <!-- เพิ่มบรรทัดนี้ก่อน scanner.js -->
     <script src="decoder.js"></script>
-
+    <script src="scanner.js"></script>
 </body>
 </html>
